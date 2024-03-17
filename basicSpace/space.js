@@ -1,23 +1,25 @@
 const glCanvas = document.getElementById("glCanvas");
-const gl = glCanvas.getContext("webgl2");
-
 glCanvas.width = 800;
 glCanvas.height = 600;
+const gl = glCanvas.getContext("webgl2");
+
 camPos = {x: 0, y: 0, z: 0};
 camRot = {x: 0, y: 0, z: 0};
 
-const vShaderSRC = `
-attribute vec4 pos;
+const vShaderSRC = `#version 300 es
+in vec4 vertex;
 
 void main() {
-  gl_Position = pos;
+  gl_Position = vertex;
 }
 `;
 
-const fShaderSRC = `
+const fShaderSRC = `#version 300 es
 precision mediump float;
+out vec4 fragColor;
+
 void main() {
-  gl_FragColor = vec4(0.0, 1.0, 0.0, 0.0);
+  fragColor = vec4(0.0, 1.0, 0.0, 1.0);
 }
 `;
 
@@ -39,10 +41,40 @@ if (gl.getShaderInfoLog(vShader)) console.log("vertex: ", gl.getShaderInfoLog(vS
 if (gl.getShaderInfoLog(fShader)) console.log("fragment: ", gl.getShaderInfoLog(fShader));
 if (gl.getProgramInfoLog(program)) console.log("program: ", gl.getProgramInfoLog(program));
 
-function frame() {
-  
+const plane = {
+  // v: new Float32Array([
+  //   1, 0, 1,  
+  //   -1, 0, 1,  
+  //   -1, 0, -1,  
+  //   1, 0, -1
+  // ]),
+  v: new Float32Array([
+    1, 1, 0,  
+    -1, 1, 0,  
+    -1, -1, 0,  
+    1, -1, 0
+  ]),
+  i: new Uint16Array([
+    0, 1, 2,  
+    0, 2, 3
+  ])
+};
 
+var vertexBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, plane.v, gl.STATIC_DRAW);
+const vertex = gl.getAttribLocation(program, "vertex");
+gl.vertexAttribPointer(vertex, 3, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(vertex);
+
+var indexBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, plane.i, gl.STATIC_DRAW);
+
+function frame() {
   gl.clearColor(0.0, 1.0, 1.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
+  //gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
 }
 requestAnimationFrame(frame);
