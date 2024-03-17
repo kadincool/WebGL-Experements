@@ -42,12 +42,19 @@ if (gl.getShaderInfoLog(fShader)) console.log("fragment: ", gl.getShaderInfoLog(
 if (gl.getProgramInfoLog(program)) console.log("program: ", gl.getProgramInfoLog(program));
 
 const plane = {
-  // v: new Float32Array([
-  //   1, 0, 1,  
-  //   -1, 0, 1,  
-  //   -1, 0, -1,  
-  //   1, 0, -1
-  // ]),
+  v: new Float32Array([
+    1, 0, 1,  
+    -1, 0, 1,  
+    -1, 0, -1,  
+    1, 0, -1
+  ]),
+  i: new Uint16Array([
+    0, 1, 2,  
+    0, 2, 3
+  ])
+};
+
+var mesh = {
   v: new Float32Array([
     1, 1, 0,  
     -1, 1, 0,  
@@ -58,7 +65,7 @@ const plane = {
     0, 1, 2,  
     0, 2, 3
   ])
-};
+}
 
 var vertexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
@@ -75,6 +82,6 @@ function frame() {
   gl.clearColor(0.0, 1.0, 1.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   //gl.drawArrays(gl.TRIANGLES, 0, 3);
-  gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
+  gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 }
 requestAnimationFrame(frame);
