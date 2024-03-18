@@ -3,30 +3,33 @@ glCanvas.width = 800;
 glCanvas.height = 600;
 const gl = glCanvas.getContext("webgl2");
 
-function makePerspective(fov = 45, aRatio = 1, near = 0.01, far = 100) {
-  fov = fov / 180 * Math.PI;
+function makePerspective(fov=90, aRatio=1, near=0.01, far=100) {
+  fov = fov / 360 * Math.PI;
   let fovMult = 1 / Math.tan(fov);
   let clipMult = 1 / (near - far);
-  return new DOMMatrix([
-    fovMult, 0, 0, 0,
-    0, fovMult * aRatio, 0, 0,
-    0, 0, (near + far) * clipMult, 1,
-    0, 0, -(2 * near * far) * clipMult, 0
-  ]);
+  return new DOMMatrix([fovMult, 0, 0, 0, 0, fovMult * aRatio, 0, 0, 0, 0, (near + far) * clipMult, 1, 0, 0, -(2 * near * far) * clipMult, 0]);
 }
 
-camPos = {x: 0, y: 0, z: 0};
-camRot = {x: 0, y: 0, z: 0};
+camPos = {
+  x: 0,
+  y: 1,
+  z: 0
+};
+camRot = {
+  x: 0,
+  y: 0,
+  z: 0
+};
 
 keys = {};
 
 const vShaderSRC = `#version 300 es
 uniform mat4 perspective;
-uniform mat4 trans;
+uniform mat4 camera;
 in vec4 vertex;
 
 void main() {
-  gl_Position = perspective * trans * vertex;
+  gl_Position = perspective * camera * vertex;
 }
 `;
 
@@ -53,36 +56,25 @@ gl.attachShader(program, vShader);
 gl.linkProgram(program);
 gl.useProgram(program);
 
-if (gl.getShaderInfoLog(vShader)) console.log("vertex: ", gl.getShaderInfoLog(vShader));
-if (gl.getShaderInfoLog(fShader)) console.log("fragment: ", gl.getShaderInfoLog(fShader));
-if (gl.getProgramInfoLog(program)) console.log("program: ", gl.getProgramInfoLog(program));
+if (gl.getShaderInfoLog(vShader))
+  console.log("vertex: ", gl.getShaderInfoLog(vShader));
+if (gl.getShaderInfoLog(fShader))
+  console.log("fragment: ", gl.getShaderInfoLog(fShader));
+if (gl.getProgramInfoLog(program))
+  console.log("program: ", gl.getProgramInfoLog(program));
 
+//meshes
 const plane = {
-  v: new Float32Array([
-    1, 1, 1,  
-    -1, 0, 1,  
-    -1, 0, -1,  
-    1, 0, -1
-  ]),
-  i: new Uint16Array([
-    0, 1, 2,  
-    0, 2, 3
-  ])
+  v: new Float32Array([1, 0, 1, -1, 0, 1, -1, 0, -1, 1, 0, -1]),
+  i: new Uint16Array([0, 1, 2, 0, 2, 3])
 };
 
 var mesh = {
-  v: new Float32Array([
-    1, 1, 0,  
-    -1, 1, 0,  
-    -1, -1, 0,  
-    1, -1, 0
-  ]),
-  i: new Uint16Array([
-    0, 1, 2,  
-    0, 2, 3
-  ])
+  v: new Float32Array([1, 1, 0, -1, 1, 0, -1, -1, 0, 1, -1, 0]),
+  i: new Uint16Array([0, 1, 2, 0, 2, 3])
 }
 
+//buffer positions
 var vertexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, plane.v, gl.STATIC_DRAW);
@@ -96,31 +88,63 @@ gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, plane.i, gl.STATIC_DRAW);
 
 //uniforms
 var perspectiveUniform = gl.getUniformLocation(program, "perspective");
-var perspectiveMatrix = makePerspective();
+var perspectiveMatrix = makePerspective(90, glCanvas.width/glCanvas.height);
 gl.uniformMatrix4fv(perspectiveUniform, false, perspectiveMatrix.toFloat32Array());
 
-var transUniform = gl.getUniformLocation(program, "trans");
-var transMatrix = new DOMMatrix();
-gl.uniformMatrix4fv(transUniform, false, transMatrix.toFloat32Array());
+var cameraUniform = gl.getUniformLocation(program, "camera");
+let cameraMatrix = new DOMMatrix();
+gl.uniformMatrix4fv(cameraUniform, false, cameraMatrix.toFloat32Array());
 
 function frame() {
-  if (keys.KeyW) camPos.z+=0.1;
-  if (keys.KeyS) camPos.z-=0.1;
-  if (keys.KeyD) camPos.x+=0.1;
-  if (keys.KeyA) camPos.x-=0.1;
-  if (keys.KeyE) camPos.y+=0.1;
-  if (keys.KeyQ) camPos.y-=0.1;
+  const rotSpeed = 3;
+  if (keys.ArrowRight) {
+    camRot.y += rotSpeed;
+  }
+  if (keys.ArrowLeft) {
+    camRot.y -= rotSpeed;
+  }
+  if (keys.ArrowDown) {
+    camRot.x += rotSpeed;
+  }
+  if (keys.ArrowUp) {
+    camRot.x -= rotSpeed;
+  }
 
-  if (keys.ArrowRight) camRot.y += 3;
-  if (keys.ArrowLeft) camRot.y -= 3;
-  if (keys.ArrowDown) camRot.x += 3;
-  if (keys.ArrowUp) camRot.x -= 3;
-  let transMatrix = new DOMMatrix();
-  transMatrix.rotateSelf(-camRot.x, 0, 0);
-  transMatrix.rotateSelf(0, -camRot.y, 0);
-  transMatrix.rotateSelf(0, 0, -camRot.z);
-  transMatrix.translateSelf(-camPos.x, -camPos.y, -camPos.z);
-  gl.uniformMatrix4fv(transUniform, false, transMatrix.toFloat32Array());
+  let moveMatrix = new DOMMatrix();
+  moveMatrix.rotateSelf(0, -camRot.y, 0);
+
+  const moveSpeed = 0.1;
+  if (keys.KeyW) {
+    camPos.x += moveMatrix.m13 * moveSpeed;
+    camPos.z += moveMatrix.m33 * moveSpeed;
+  }
+  if (keys.KeyS) {
+    camPos.x -= moveMatrix.m13 * moveSpeed;
+    camPos.z -= moveMatrix.m33 * moveSpeed;
+  }
+  if (keys.KeyD) {
+    camPos.x += moveMatrix.m11 * moveSpeed;
+    camPos.z += moveMatrix.m31 * moveSpeed;
+  }
+  if (keys.KeyA) {
+    camPos.x -= moveMatrix.m11 * moveSpeed;
+    camPos.z -= moveMatrix.m31 * moveSpeed;
+  }
+  if (keys.KeyE) {
+    camPos.y += moveSpeed;
+  }
+  if (keys.KeyQ) {
+    camPos.y -= moveSpeed;
+  }
+
+  let cameraMatrix = new DOMMatrix();
+  cameraMatrix.rotateSelf(-camRot.x, 0, 0);
+  cameraMatrix.rotateSelf(0, -camRot.y, 0);
+  cameraMatrix.rotateSelf(0, 0, -camRot.z);
+  
+  cameraMatrix.translateSelf(-camPos.x, -camPos.y, -camPos.z);
+  gl.uniformMatrix4fv(cameraUniform, false, cameraMatrix.toFloat32Array());
+
   gl.clearColor(0.0, 1.0, 1.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   //gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -129,10 +153,12 @@ function frame() {
 }
 requestAnimationFrame(frame);
 
-document.addEventListener("keydown", (e) => {
+document.addEventListener("keydown", (e)=>{
   keys[e.code] = true;
-});
+}
+);
 
-document.addEventListener("keyup", (e) => {
+document.addEventListener("keyup", (e)=>{
   keys[e.code] = false;
-});
+}
+);
