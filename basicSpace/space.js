@@ -130,50 +130,7 @@ function frame() {
 requestAnimationFrame(frame);
 
 document.addEventListener("keydown", (e) => {
-  // switch (e.code) {
-  //   case "KeyE":
-  //     camPos.y+=0.1;
-  //     break;
-  //   case "KeyQ":
-  //     camPos.y-=0.1;
-  //     break
-  //   case "KeyW":
-  //     camPos.z+=0.1;
-  //     break;
-  //   case "KeyS":
-  //     camPos.z-=0.1;
-  //     break;
-  //   case "KeyD":
-  //     camPos.x+=0.1;
-  //     break;
-  //   case "KeyA":
-  //     camPos.x-=0.1;
-  //     break;
-  //   case "ArrowDown":
-  //   case "KeyK":
-  //     camRot.x += 5;
-  //     break;
-  //   case "ArrowUp":
-  //   case "KeyI":
-  //     camRot.x -= 5;
-  //     break;
-  //   case "ArrowRight":
-  //   case "KeyL":
-  //     camRot.y += 5;
-  //     break;
-  //   case "ArrowLeft":
-  //   case "KeyJ":
-  //     camRot.y -= 5;
-  //     break;
-  //   case "KeyO":
-  //     camRot.z -= 5;
-  //     break;
-  //   case "KeyU":
-  //     camRot.z += 5;
-  //     break;
-  // }
   keys[e.code] = true;
-  // requestAnimationFrame(frame);
 });
 
 document.addEventListener("keyup", (e) => {
