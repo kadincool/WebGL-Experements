@@ -32,6 +32,17 @@ function compile(vShaderSRC, fShaderSRC) {
   return program;
 }
 
+function multiplyByMatrix(vector, matrix) {
+  // console.log(vector, matrix)
+  if (!vector[3]) vector[3] = 1;
+  return [
+    vector[0] * matrix.m11 + vector[1] * matrix.m21 + vector[2] * matrix.m31 + vector[3] * matrix.m41,
+    vector[0] * matrix.m12 + vector[1] * matrix.m22 + vector[2] * matrix.m32 + vector[3] * matrix.m42,
+    vector[0] * matrix.m13 + vector[1] * matrix.m23 + vector[2] * matrix.m33 + vector[3] * matrix.m43,
+    vector[0] * matrix.m14 + vector[1] * matrix.m24 + vector[2] * matrix.m34 + vector[3] * matrix.m44
+  ]
+}
+
 const primModels = {
   plane: {
     v: new Float32Array([
@@ -51,7 +62,7 @@ const primModels = {
       0, 1, 0
     ])
   }
-}
+};
 
 const specialModels = {
   bowl: {
@@ -83,6 +94,17 @@ const specialModels = {
       1, 1, 1,
     ])
   }
+};
+
+var renderModel = {
+  v: new Float32Array(),
+  i: new Uint16Array(),
+  c: new Float32Array()
+};
+
+function addModel(model, matrix) {
+  let modelBegin = renderModel.v.length;
+  
 }
 
 const glCanvas = document.getElementById("glCanvas");
@@ -122,84 +144,10 @@ void main() {
 
 program = compile(vShaderSRC, fShaderSRC);
 
-//meshes
-const plane = {
-  v: new Float32Array([
-    1, 0, 1,
-    -1, 0, 1,
-    -1, 0, -1,
-    1, 0, -1,
-  ]),
-  i: new Uint16Array([
-    0, 1, 2,
-    0, 2, 3
-  ]),
-  c: new Float32Array([
-    0, 1, 0,
-    0, 1, 0,
-    0, 1, 0,
-    0, 1, 0
-  ])
-};
-
-const bowl = {
-  v: new Float32Array([
-    1, 0, 1,
-    -1, 0, 1,
-    -1, 0, -1,
-    1, 0, -1,
-    1.5, 1, 1.5,
-    -1.5, 1, 1.5,
-    -1.5, 1, -1.5,
-    1.5, 1, -1.5,
-  ]),
-  i: new Uint16Array([
-    0, 1, 2,  0, 2, 3,
-    0, 4, 1,  1, 4, 5,
-    1, 5, 2,  2, 5, 6,
-    2, 6, 3,  3, 6, 7,
-    3, 7, 0,  0, 7, 4
-  ]),
-  c: new Float32Array([
-    0, 0, 0,
-    0, 0, 0,
-    0, 0, 0,
-    0, 0, 0,
-    0, 1, 1,
-    0, 1, 1,
-    0, 1, 1,
-    0, 1, 1,
-  ])
-  // c: new Float32Array([
-  //   0.8, 0.8, 0.8,
-  //   0.8, 0.8, 0.8,
-  //   0.8, 0.8, 0.8,
-  //   0.8, 0.8, 0.8,
-  //   1, 1, 1,
-  //   1, 1, 1,
-  //   1, 1, 1,
-  //   1, 1, 1,
-  // ])
-}
-
-var mesh = {
-  v: new Float32Array([
-    1, 1, 0,
-    -1, 1, 0,
-    -1, -1, 0,
-    1, -1, 0
-  ]),
-  i: new Uint16Array([
-    0, 1, 2,
-    0, 2, 3
-  ])
-}
-
 //buffer positions
 var vertexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, specialModels.bowl.v, gl.STATIC_DRAW); // see if can overwrite buffer
-//gl.bufferData(gl.ARRAY_BUFFER, mesh.v, gl.STATIC_DRAW); // see if can overwrite buffer
+gl.bufferData(gl.ARRAY_BUFFER, specialModels.bowl.v, gl.STATIC_DRAW);
 const vertex = gl.getAttribLocation(program, "vertex");
 gl.vertexAttribPointer(vertex, 3, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(vertex);
@@ -215,7 +163,6 @@ gl.enableVertexAttribArray(color);
 var indexBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, specialModels.bowl.i, gl.STATIC_DRAW);
-// gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, mesh.i, gl.STATIC_DRAW);
 
 //uniforms
 var perspectiveUniform = gl.getUniformLocation(program, "perspective");
@@ -268,7 +215,7 @@ function frame() {
   if (keys.KeyE || keys.Space) {
     camPos.y += moveSpeed;
   }
-  if (keys.KeyQ || keys.LeftShift) {
+  if (keys.KeyQ || keys.ShiftLeft) {
     camPos.y -= moveSpeed;
   }
 
@@ -278,10 +225,12 @@ function frame() {
   cameraMatrix.rotateSelf(0, 0, -camRot.z);
   cameraMatrix.translateSelf(-camPos.x, -camPos.y, -camPos.z);
   gl.uniformMatrix4fv(cameraUniform, false, cameraMatrix.toFloat32Array());
+  if (keys.KeyL) console.log(multiplyByMatrix([0, 0, 0], cameraMatrix));
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   //gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.drawElements(gl.TRIANGLES, specialModels.bowl.i.length, gl.UNSIGNED_SHORT, 0);
+  // console.log(cameraMatrix);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
