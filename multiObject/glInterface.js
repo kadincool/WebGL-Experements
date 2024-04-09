@@ -4,7 +4,7 @@ var renderModel = {
   c: new Array()
 };
 
-function loadModel(model, transform, color) {
+function loadModel(model, transform = new DOMMatrix(), color) {
   if (!model.v || !model.i || !model.c) {
     console.error("Model lacks necessary information");
     return;
@@ -35,6 +35,7 @@ in vec4 color;
 out vec4 v_color;
 
 void main() {
+  // gl_Position = perspective * camera * vertex;
   gl_Position = perspective * camera * vertex;
   v_color = color;
 }`;
@@ -50,6 +51,7 @@ void main() {
 }`
 
 var program = compile(vShader, fShader);
+gl.useProgram(program);
 console.log(program);
 
 gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -63,7 +65,7 @@ function render(perspectiveMatrix, cameraMatrix) {
   let indexBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(renderModel.i), gl.STATIC_DRAW);
-  gl.deleteBuffer(indexBuffer);
+  //gl.deleteBuffer(indexBuffer);
 
   let perspectiveUniform = gl.getUniformLocation(program, "perspective");
   gl.uniformMatrix4fv(perspectiveUniform, false, perspectiveMatrix.toFloat32Array());

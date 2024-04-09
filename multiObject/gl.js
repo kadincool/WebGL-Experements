@@ -33,8 +33,7 @@ function bufferData(program, attribute, data, length, type) {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
   let attributeLocation = gl.getAttribLocation(program, attribute);
-  console.log(attributeLocation)
   gl.vertexAttribPointer(attributeLocation, length, type, false, 0, 0);
   gl.enableVertexAttribArray(attributeLocation);
-  gl.deleteBuffer(buffer);
+  // gl.deleteBuffer(buffer);
 }
