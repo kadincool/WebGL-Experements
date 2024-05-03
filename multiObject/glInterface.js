@@ -9,11 +9,11 @@ function loadModel(model, transform = new DOMMatrix(), color) {
     console.error("Model lacks necessary information");
     return;
   }
+  let modelBegin = renderModel.v.length / 3;
   for (let i = 0; i < model.v.length; i+=3) {
     let transPos = multiplyByMatrix([model.v[i], model.v[i+1], model.v[i+2], 1], transform);
     renderModel.v.push(transPos[0], transPos[1], transPos[2]);
   }
-  let modelBegin = renderModel.i.length;
   for (let i = 0; i < model.i.length; i++) {
     renderModel.i.push(model.i[i] + modelBegin);
   }
@@ -52,7 +52,7 @@ void main() {
 
 var program = compile(vShader, fShader);
 gl.useProgram(program);
-console.log(program);
+// console.log(program);
 
 gl.clearColor(0.0, 0.0, 0.0, 1.0);
 gl.enable(gl.CULL_FACE);

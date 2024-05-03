@@ -10,7 +10,7 @@ function multiplyByMatrix(vector, matrix) {
 function makePerspective(fov=90, aRatio=1, near=0.01, far=100) {
   fov = fov / 360 * Math.PI;
   let fovMult = 1 / Math.tan(fov);
-  let clipMult = 1 / (near - far);
+  let clipMult = 1 / (far - near);
   return new DOMMatrix([
     fovMult, 0, 0, 0,
     0, fovMult * aRatio, 0, 0,
