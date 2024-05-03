@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>moving object</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="glCanvas" width="800" height="600"></canvas>
+    <script src="./glLib/lib.js"></script>
+    <script src="./glLib/gl.js"></script>
+    <script src="./glLib/glInterface.js"></script>
+    <script src="./glLib/models.js"></script>
+    <script>
+var perspective = makePerspective();
+
+var camPos = {x: 0, y: 0, z: 0};
+var camRot = {x: 0, y: 0, z: 0};
+
+var keys = {};
+
+var static = newModel();
+loadModel(cube, new DOMMatrix().translateSelf(0, 0, 5).rotateSelf(0, 45, 0), false, static);
+
+function frame() {
+  const rotSpeed = 1;
+  if (keys.ArrowRight) {
+    camRot.y += rotSpeed;
+  }
+  if (keys.ArrowLeft) {
+    camRot.y -= rotSpeed;
+  }
+  if (keys.ArrowDown) {
+    camRot.x += rotSpeed;
+  }
+  if (keys.ArrowUp) {
+    camRot.x -= rotSpeed;
+  }
+
+  let moveMatrix = new DOMMatrix();
+  moveMatrix.rotateSelf(0, -camRot.y, 0);
+
+  const moveSpeed = 0.05;
+  if (keys.KeyW) {
+    camPos.x += moveMatrix.m13 * moveSpeed;
+    camPos.z += moveMatrix.m33 * moveSpeed;
+  }
+  if (keys.KeyS) {
+    camPos.x -= moveMatrix.m13 * moveSpeed;
+    camPos.z -= moveMatrix.m33 * moveSpeed;
+  }
+  if (keys.KeyD) {
+    camPos.x += moveMatrix.m11 * moveSpeed;
+    camPos.z += moveMatrix.m31 * moveSpeed;
+  }
+  if (keys.KeyA) {
+    camPos.x -= moveMatrix.m11 * moveSpeed;
+    camPos.z -= moveMatrix.m31 * moveSpeed;
+  }
+  if (keys.KeyE || keys.Space) {
+    camPos.y += moveSpeed;
+  }
+  if (keys.KeyQ || keys.ShiftLeft) {
+    camPos.y -= moveSpeed;
+  }
+
+  let camera = new DOMMatrix();
+  camera.rotateSelf(-camRot.x, 0, 0);
+  camera.rotateSelf(0, -camRot.y, 0);
+  camera.rotateSelf(0, 0, -camRot.z);
+  camera.translateSelf(-camPos.x, -camPos.y, -camPos.z);
+
+  let moving = newModel();
+  for (let i = 1; i < 720; i++) {
+    loadModel(cube, new DOMMatrix().translateSelf(0, 3 * i, 0).rotateSelf(0, Date.now() / 3 + i * 5, 0), false, moving);
+  }
+
+  // setModel(static);
+  // render(perspective, camera);
+
+  // setModel(moving);
+  // render(perspective, camera);
+  render(perspective, camera, [static, moving]);
+
+  requestAnimationFrame(frame);
+}
+frame();
+
+document.addEventListener("keydown", (e) => {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) e.preventDefault();
+  keys[e.code] = true;
+});
+
+document.addEventListener("keyup", (e) => {
+  keys[e.code] = false;
+});
+    </script>
+  </body>
+</html>
