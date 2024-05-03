@@ -7,7 +7,7 @@ function multiplyByMatrix(vector, matrix) {
   ]
 }
 
-function makePerspective(fov=90, aRatio=1, near=0.01, far=100) {
+function makePerspective(fov = 90, aRatio = glCanvas.width / glCanvas.height, near = 0.01, far = 100) {
   fov = fov / 360 * Math.PI;
   let fovMult = 1 / Math.tan(fov);
   let clipMult = 1 / (far - near);

@@ -1,13 +1,13 @@
-var perspective = makePerspective(90, 2);
+var perspective = makePerspective();
 
-var camPos = {x: 0, y: 0, z: 0};
+var camPos = {x: 0, y: 0.1, z: 0};
 var camRot = {x: 0, y: 0, z: 0};
 
 var keys = {};
 
 loadModel(plane, new DOMMatrix().scaleSelf(2, 2, 2).translateSelf(0, -1, 0), [1, 0, 0]);
 loadModel(plane, new DOMMatrix().translateSelf(0, -5, 0), [0, 1, 0]);
-loadModel(plane, new DOMMatrix(), [0, 0, 1]);
+loadModel(cube, new DOMMatrix().translateSelf(0, 0, 3), [0, 0, 1]);
 // loadModel(plane);
 
 function frame() {
@@ -74,6 +74,7 @@ frame();
 // render(perspective, camera);
 
 document.addEventListener("keydown", (e) => {
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) e.preventDefault();
   keys[e.code] = true;
 });
 
