@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>textures</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="glCanvas"></canvas>
+    <script src="./gl.js"></script>
+    <script src="./models.js"></script>
+    <script src="./player.js"></script>
+    <script>
+var lastFrame = Date.now();
+var perspective = makePerspective(120);
+
+loadModel(cube, new DOMMatrix().translateSelf(0, 0, 5));
+
+function frame() {
+  let delta = Date.now() - lastFrame;
+  lastFrame += delta;
+  delta /= 1000;
+
+  movePlayer(delta)
+
+  render(perspective, camPosMat());
+
+  requestAnimationFrame(frame);
+}
+frame();
+    </script>
+  </body>
+</html>
