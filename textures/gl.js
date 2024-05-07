@@ -65,8 +65,20 @@ function newModel() {
   return {
     v: new Array(),
     i: new Array(),
-    c: new Array()
+    c: new Array(),
+    u: new Array(),
   };
+}
+
+async function loadTexture(program, attribute, path) {
+  let texture = gl.createTexture();
+  let sampler = gl.getUniformLocation(program, attribute);
+  let img = new Image();
+  img.src = path;
+  img.onload = function() {
+    
+  }
+
 }
 
 var renderModel = newModel();
@@ -80,6 +92,7 @@ function clearModel(toModel = renderModel) {
   toModel.v = new Array();
   toModel.i = new Array();
   toModel.c = new Array();
+  toModel.u = new Array();
 };
 
 function setModel(model, toModel = renderModel) {
@@ -95,6 +108,7 @@ function setModel(model, toModel = renderModel) {
   toModel.v = Array.from(model.v);
   toModel.i = Array.from(model.i);
   toModel.c = Array.from(model.c);
+  toModel.u = Array.from(model.u);
 }
 
 function loadModel(model, transform = new DOMMatrix(), color, toModel = renderModel) {
@@ -121,37 +135,45 @@ function loadModel(model, transform = new DOMMatrix(), color, toModel = renderMo
       toModel.c.push(model.c[i]);
     }
   }
+  toModel.u = toModel.u.concat(...model.u)
 };
 
 const vShader = `#version 300 es
 uniform mat4 perspective;
 uniform mat4 camera;
+uniform sampler2D texture;
+uniform vec2 texSize;
 in vec4 vertex;
 in vec4 color;
+in vec2 uv;
 
 out vec4 v_color;
+out vec2 v_uv;
 
 void main() {
   // gl_Position = perspective * camera * vertex;
   gl_Position = perspective * camera * vertex;
   v_color = color;
+  v_uv = uv;
 }`;
 
 const fShader = `#version 300 es
 precision mediump float;
 
 in vec4 v_color;
+in vec2 v_uv;
 out vec4 fragColor;
 
 void main() {
-  fragColor = v_color;
+  // fragColor = v_color;
+  fragColor = vec4(v_uv, 0.0, 1.0);
 }`
 
 var program = compile(vShader, fShader);
 gl.useProgram(program);
 // console.log(program);
 
-gl.clearColor(0.0, 0.0, 0.0, 1.0);
+gl.clearColor(0.0, 0.7, 0.9, 1.0);
 gl.enable(gl.CULL_FACE);
 gl.enable(gl.DEPTH_TEST);
 
@@ -162,6 +184,7 @@ function render(perspectiveMatrix, cameraMatrix, data = [renderModel]) {
     // console.log(data[i]);
     bufferData(program, "vertex", new Float32Array(data[i].v), 3, gl.FLOAT);
     bufferData(program, "color", new Float32Array(data[i].c), 3, gl.FLOAT);
+    bufferData(program, "uv", new Uint16Array(data[i].u), 2, gl.UNSIGNED_SHORT);
     let indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data[i].i), gl.STATIC_DRAW);
